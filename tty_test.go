@@ -2,6 +2,8 @@ package tea
 
 import (
 	"bytes"
+	"errors"
+	"os"
 	"testing"
 )
 
@@ -26,6 +28,38 @@ func (m *windowSizeModel) Update(msg Msg) (Model, Cmd) {
 
 func (m *windowSizeModel) View() View {
 	return NewView("")
+}
+
+func TestCloseTTY(t *testing.T) {
+	t.Run("shared file", func(t *testing.T) {
+		file := createTempFile(t)
+		closeTTY(file, file)
+		assertFileClosed(t, file)
+	})
+
+	t.Run("separate files", func(t *testing.T) {
+		in := createTempFile(t)
+		out := createTempFile(t)
+		closeTTY(in, out)
+		assertFileClosed(t, in)
+		assertFileClosed(t, out)
+	})
+}
+
+func createTempFile(t *testing.T) *os.File {
+	t.Helper()
+	file, err := os.CreateTemp(t.TempDir(), "tty")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return file
+}
+
+func assertFileClosed(t *testing.T, file *os.File) {
+	t.Helper()
+	if _, err := file.Write(nil); !errors.Is(err, os.ErrClosed) {
+		t.Errorf("expected closed file, got %v", err)
+	}
 }
 
 func TestFallbackDimensions(t *testing.T) {

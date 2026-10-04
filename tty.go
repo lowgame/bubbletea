@@ -174,3 +174,10 @@ func OpenTTY() (*os.File, *os.File, error) {
 	}
 	return in, out, nil
 }
+
+func closeTTY(in, out *os.File) {
+	_ = in.Close()
+	if out != in {
+		_ = out.Close()
+	}
+}

@@ -1019,10 +1019,11 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 	} else if p.input == nil {
 		p.input = os.Stdin
 		if !term.IsTerminal(os.Stdin.Fd()) {
-			ttyIn, _, err := OpenTTY()
+			ttyIn, ttyOut, err := OpenTTY()
 			if err != nil {
 				return p.initialModel, fmt.Errorf("bubbletea: error opening TTY: %w", err)
 			}
+			defer closeTTY(ttyIn, ttyOut)
 			p.input = ttyIn
 		}
 	}
